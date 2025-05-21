@@ -161,12 +161,18 @@ async def create_tutor(tutor: TutorCreate):
     db_tutor = await get_tutor_by_email(tutor.email)
     if db_tutor:
         raise HTTPException(status_code=400, detail="Email already registered")
+    
+    # First tutor to register becomes admin automatically
+    tutor_count = await db.tutors.count_documents({})
+    is_admin = tutor_count == 0 or tutor.is_admin
+    
     hashed_password = get_password_hash(tutor.password)
     tutor_dict = tutor.dict()
     tutor_dict.pop("password")
-    tutor_obj = Tutor(**tutor_dict)
+    tutor_obj = Tutor(**tutor_dict, is_admin=is_admin)
     tutor_dict = tutor_obj.dict()
     tutor_dict["password"] = hashed_password
+    
     result = await db.tutors.insert_one(tutor_dict)
     return tutor_obj
 
