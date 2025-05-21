@@ -312,6 +312,71 @@ class TutorAppTester:
             200
         )
         return success
+        
+    # Admin-specific test methods
+    def test_admin_stats(self):
+        """Test getting admin stats"""
+        if not self.is_admin:
+            print("❌ Cannot test admin_stats: User is not an admin")
+            return False
+            
+        success, response = self.run_test(
+            "Get admin stats",
+            "GET",
+            "admin/stats",
+            200
+        )
+        if success:
+            print(f"✅ Admin stats: {response}")
+        return success
+        
+    def test_admin_tutors_list(self):
+        """Test getting all tutors (admin only)"""
+        if not self.is_admin:
+            print("❌ Cannot test admin_tutors_list: User is not an admin")
+            return False
+            
+        success, response = self.run_test(
+            "Get all tutors (admin)",
+            "GET",
+            "admin/tutors",
+            200
+        )
+        if success:
+            print(f"✅ Found {len(response)} tutors")
+        return success
+        
+    def test_admin_students_list(self):
+        """Test getting all students (admin only)"""
+        if not self.is_admin:
+            print("❌ Cannot test admin_students_list: User is not an admin")
+            return False
+            
+        success, response = self.run_test(
+            "Get all students (admin)",
+            "GET",
+            "admin/students",
+            200
+        )
+        if success:
+            print(f"✅ Found {len(response)} students")
+        return success
+        
+    def test_admin_lessons_list(self):
+        """Test getting all lessons (admin only)"""
+        if not self.is_admin:
+            print("❌ Cannot test admin_lessons_list: User is not an admin")
+            return False
+            
+        success, response = self.run_test(
+            "Get all lessons (admin)",
+            "GET",
+            "admin/lessons",
+            200
+        )
+        if success:
+            print(f"✅ Found {len(response)} lessons")
+        return success
 
 def main():
     # Get the backend URL from the frontend .env file
