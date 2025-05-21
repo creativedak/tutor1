@@ -13,6 +13,12 @@ import StudentForm from "./pages/StudentForm";
 import ScheduleView from "./pages/ScheduleView";
 import LessonForm from "./pages/LessonForm";
 
+// Admin Components
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminTutorsList from "./pages/admin/AdminTutorsList";
+import AdminStudentsList from "./pages/admin/AdminStudentsList";
+import AdminLessonsList from "./pages/admin/AdminLessonsList";
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
