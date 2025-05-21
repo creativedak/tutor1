@@ -11,7 +11,7 @@ function StudentCard({ student, refreshStudents }) {
   const togglePaymentStatus = async () => {
     setIsUpdating(true);
     try {
-      await axios.put(`${API}/students/${student.id}/payment`, !student.payment_status);
+      await axios.put(`${API}/students/${student.id}/payment`);
       refreshStudents();
     } catch (error) {
       console.error("Error updating payment status:", error);
@@ -23,7 +23,7 @@ function StudentCard({ student, refreshStudents }) {
   const toggleHomeworkStatus = async () => {
     setIsUpdating(true);
     try {
-      await axios.put(`${API}/students/${student.id}/homework`, !student.homework_status);
+      await axios.put(`${API}/students/${student.id}/homework`);
       refreshStudents();
     } catch (error) {
       console.error("Error updating homework status:", error);
