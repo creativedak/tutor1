@@ -185,7 +185,7 @@ class TutorAppTester:
             "PUT",
             f"students/{self.student_id}/payment",
             200,
-            data=True
+            params={"status": "true"}
         )
         return success
 
@@ -200,7 +200,7 @@ class TutorAppTester:
             "PUT",
             f"students/{self.student_id}/homework",
             200,
-            data=True
+            params={"status": "true"}
         )
         return success
 
