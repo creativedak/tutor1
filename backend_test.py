@@ -15,6 +15,7 @@ class TutorAppTester:
         self.tutor_name = "Test Tutor"
         self.student_id = None
         self.lesson_id = None
+        self.is_admin = False
 
     def run_test(self, name, method, endpoint, expected_status, data=None, params=None):
         """Run a single API test"""
