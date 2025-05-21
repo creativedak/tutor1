@@ -5,7 +5,7 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-function Login({ setIsLoggedIn }) {
+function Login({ setIsLoggedIn, setUser }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "", // FastAPI OAuth requires 'username' field
@@ -36,6 +36,15 @@ function Login({ setIsLoggedIn }) {
       const response = await axios.post(`${API}/token`, params);
       
       localStorage.setItem("token", response.data.access_token);
+      
+      // Get user info
+      const userResponse = await axios.get(`${API}/tutors/me`, {
+        headers: {
+          Authorization: `Bearer ${response.data.access_token}`
+        }
+      });
+      
+      setUser(userResponse.data);
       setIsLoggedIn(true);
       navigate("/");
     } catch (error) {
