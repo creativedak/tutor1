@@ -164,12 +164,16 @@ async def create_tutor(tutor: TutorCreate):
     
     # First tutor to register becomes admin automatically
     tutor_count = await db.tutors.count_documents({})
-    is_admin = tutor_count == 0 or tutor.is_admin
     
     hashed_password = get_password_hash(tutor.password)
     tutor_dict = tutor.dict()
     tutor_dict.pop("password")
-    tutor_obj = Tutor(**tutor_dict, is_admin=is_admin)
+    
+    # Set admin status - first tutor is always admin
+    if tutor_count == 0:
+        tutor_dict["is_admin"] = True
+    
+    tutor_obj = Tutor(**tutor_dict)
     tutor_dict = tutor_obj.dict()
     tutor_dict["password"] = hashed_password
     
