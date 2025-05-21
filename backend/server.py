@@ -51,9 +51,11 @@ class TutorBase(BaseModel):
 
 class TutorCreate(TutorBase):
     password: str
+    is_admin: bool = False
 
 class Tutor(TutorBase):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    is_admin: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class StudentBase(BaseModel):
