@@ -400,6 +400,21 @@ def main():
     if not tester.test_login():
         print("❌ Login failed, stopping tests")
         return 1
+    
+    # Check if user is admin (first user should be)
+    tutor_profile = None
+    success, response = tester.run_test(
+        "Get tutor profile to check admin status",
+        "GET",
+        "tutors/me",
+        200
+    )
+    if success:
+        tutor_profile = response
+        tester.is_admin = tutor_profile.get('is_admin', False)
+        print(f"✅ User admin status: {tester.is_admin}")
+    else:
+        print("❌ Failed to get tutor profile")
         
     if not tester.test_get_tutor_profile():
         print("❌ Getting tutor profile failed")
@@ -422,11 +437,23 @@ def main():
             tester.test_get_lessons()
             tester.test_get_lesson()
             tester.test_update_lesson()
-            tester.test_delete_lesson()
+            # Don't delete the lesson yet, we want to test admin views with data
     else:
         print("❌ Cannot run lesson tests: No student ID available")
     
+    print("\n===== ADMIN TESTS =====")
+    if tester.is_admin:
+        print("Running admin tests...")
+        tester.test_admin_stats()
+        tester.test_admin_tutors_list()
+        tester.test_admin_students_list()
+        tester.test_admin_lessons_list()
+    else:
+        print("❌ Cannot run admin tests: User is not an admin")
+    
     print("\n===== CLEANUP TESTS =====")
+    if tester.lesson_id:
+        tester.test_delete_lesson()
     if tester.student_id:
         tester.test_delete_student()
     
