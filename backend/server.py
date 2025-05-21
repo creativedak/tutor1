@@ -216,25 +216,29 @@ async def delete_student(student_id: str, current_tutor = Depends(get_current_tu
     return {"status": "success", "message": "Student deleted"}
 
 @api_router.put("/students/{student_id}/payment", response_model=Student)
-async def update_payment_status(student_id: str, status: bool, current_tutor = Depends(get_current_tutor)):
+async def update_payment_status(student_id: str, current_tutor = Depends(get_current_tutor)):
     existing = await db.students.find_one({"id": student_id, "tutor_id": current_tutor["id"]})
     if existing is None:
         raise HTTPException(status_code=404, detail="Student not found")
     
+    new_status = not existing.get("payment_status", False)
+    
     await db.students.update_one(
-        {"id": student_id}, {"$set": {"payment_status": status}}
+        {"id": student_id}, {"$set": {"payment_status": new_status}}
     )
     updated = await db.students.find_one({"id": student_id})
     return Student(**updated)
 
 @api_router.put("/students/{student_id}/homework", response_model=Student)
-async def update_homework_status(student_id: str, status: bool, current_tutor = Depends(get_current_tutor)):
+async def update_homework_status(student_id: str, current_tutor = Depends(get_current_tutor)):
     existing = await db.students.find_one({"id": student_id, "tutor_id": current_tutor["id"]})
     if existing is None:
         raise HTTPException(status_code=404, detail="Student not found")
     
+    new_status = not existing.get("homework_status", False)
+    
     await db.students.update_one(
-        {"id": student_id}, {"$set": {"homework_status": status}}
+        {"id": student_id}, {"$set": {"homework_status": new_status}}
     )
     updated = await db.students.find_one({"id": student_id})
     return Student(**updated)
