@@ -245,7 +245,100 @@ async def update_homework_status(student_id: str, current_tutor = Depends(get_cu
     updated = await db.students.find_one({"id": student_id})
     return Student(**updated)
 
-# Lesson routes
+# Helper functions to check permissions
+async def get_admin_tutor(current_tutor = Depends(get_current_tutor)):
+    if not current_tutor.get("is_admin", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to perform this action",
+        )
+    return current_tutor
+
+# Admin routes
+@api_router.get("/admin/tutors", response_model=List[Tutor])
+async def list_all_tutors(admin_tutor = Depends(get_admin_tutor)):
+    tutors = await db.tutors.find().to_list(1000)
+    return [Tutor(**{k:v for k,v in tutor.items() if k != "password"}) for tutor in tutors]
+
+@api_router.get("/admin/tutors/{tutor_id}", response_model=Tutor)
+async def get_tutor_by_id(tutor_id: str, admin_tutor = Depends(get_admin_tutor)):
+    tutor = await db.tutors.find_one({"id": tutor_id})
+    if tutor is None:
+        raise HTTPException(status_code=404, detail="Tutor not found")
+    return Tutor(**{k:v for k,v in tutor.items() if k != "password"})
+
+@api_router.delete("/admin/tutors/{tutor_id}", response_model=dict)
+async def delete_tutor(tutor_id: str, admin_tutor = Depends(get_admin_tutor)):
+    if tutor_id == admin_tutor["id"]:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    
+    tutor = await db.tutors.find_one({"id": tutor_id})
+    if tutor is None:
+        raise HTTPException(status_code=404, detail="Tutor not found")
+
+    await db.tutors.delete_one({"id": tutor_id})
+    
+    # Delete associated students and lessons
+    students = await db.students.find({"tutor_id": tutor_id}).to_list(1000)
+    student_ids = [student["id"] for student in students]
+    
+    await db.students.delete_many({"tutor_id": tutor_id})
+    await db.lessons.delete_many({"tutor_id": tutor_id})
+    
+    return {"status": "success", "message": "Tutor and all associated data deleted"}
+
+@api_router.put("/admin/tutors/{tutor_id}/admin", response_model=Tutor)
+async def toggle_admin_status(tutor_id: str, admin_tutor = Depends(get_admin_tutor)):
+    tutor = await db.tutors.find_one({"id": tutor_id})
+    if tutor is None:
+        raise HTTPException(status_code=404, detail="Tutor not found")
+    
+    # Toggle admin status
+    new_admin_status = not tutor.get("is_admin", False)
+    
+    await db.tutors.update_one(
+        {"id": tutor_id}, {"$set": {"is_admin": new_admin_status}}
+    )
+    
+    updated = await db.tutors.find_one({"id": tutor_id})
+    return Tutor(**{k:v for k,v in updated.items() if k != "password"})
+
+@api_router.get("/admin/students", response_model=List[Student])
+async def list_all_students(admin_tutor = Depends(get_admin_tutor)):
+    students = await db.students.find().to_list(1000)
+    return [Student(**student) for student in students]
+
+@api_router.get("/admin/lessons", response_model=List[Lesson])
+async def list_all_lessons(admin_tutor = Depends(get_admin_tutor)):
+    lessons = await db.lessons.find().to_list(1000)
+    return [Lesson(**lesson) for lesson in lessons]
+
+@api_router.get("/admin/stats", response_model=dict)
+async def get_system_stats(admin_tutor = Depends(get_admin_tutor)):
+    tutor_count = await db.tutors.count_documents({})
+    student_count = await db.students.count_documents({})
+    lesson_count = await db.lessons.count_documents({})
+    
+    # Get lesson count by month
+    lessons = await db.lessons.find().to_list(1000)
+    lessons_by_month = {}
+    
+    for lesson in lessons:
+        start_time = lesson.get("start_time")
+        if start_time:
+            date = datetime.fromisoformat(start_time.replace('Z', '+00:00')) if isinstance(start_time, str) else start_time
+            month_key = f"{date.year}-{date.month:02d}"
+            if month_key in lessons_by_month:
+                lessons_by_month[month_key] += 1
+            else:
+                lessons_by_month[month_key] = 1
+    
+    return {
+        "tutor_count": tutor_count,
+        "student_count": student_count,
+        "lesson_count": lesson_count,
+        "lessons_by_month": lessons_by_month
+    }
 @api_router.post("/lessons", response_model=Lesson)
 async def create_lesson(lesson: LessonCreate, current_tutor = Depends(get_current_tutor)):
     # Verify student belongs to tutor
