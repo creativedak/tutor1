@@ -5,7 +5,7 @@ import axios from "axios";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-function Register({ setIsLoggedIn }) {
+function Register({ setIsLoggedIn, setUser }) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -38,7 +38,7 @@ function Register({ setIsLoggedIn }) {
 
     try {
       // Register the tutor
-      await axios.post(`${API}/tutors`, {
+      const registrationResponse = await axios.post(`${API}/tutors`, {
         name: formData.name,
         email: formData.email,
         password: formData.password,
@@ -52,6 +52,15 @@ function Register({ setIsLoggedIn }) {
       const loginResponse = await axios.post(`${API}/token`, params);
       
       localStorage.setItem("token", loginResponse.data.access_token);
+      
+      // Get user info
+      const userResponse = await axios.get(`${API}/tutors/me`, {
+        headers: {
+          Authorization: `Bearer ${loginResponse.data.access_token}`
+        }
+      });
+      
+      setUser(userResponse.data);
       setIsLoggedIn(true);
       navigate("/");
     } catch (error) {
